@@ -1,4 +1,4 @@
-# 🤟 ASLTalk — Real-Time ASL Communication System
+#  ASLTalk — Real-Time ASL Communication System
 
 A full-stack Flask web app that reads American Sign Language hand gestures from
 your webcam and converts them into text through a WhatsApp-style chat interface.
@@ -67,7 +67,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🎮 How to Use
+##  How to Use
 
 | Action | Control |
 |--------|---------|
@@ -82,7 +82,7 @@ http://127.0.0.1:5000
 
 ---
 
-## 🧠 Model Integration Details
+##  Model Integration Details
 
 The backend (`app.py`) expects:
 
@@ -95,7 +95,7 @@ The backend (`app.py`) expects:
 
 ---
 
-## 🔌 Real-Time Communication
+##  Real-Time Communication
 
 - **Flask-SocketIO** pushes ASL detection updates to the browser every frame
 - **AJAX POST** endpoints handle button actions
@@ -115,7 +115,7 @@ The backend (`app.py`) expects:
 
 ---
 
-## 🛠 Configuration (app.py)
+##  Configuration (app.py)
 
 ```python
 SMOOTHING_WINDOW = 10     # frames for majority-vote smoothing
