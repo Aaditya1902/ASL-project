@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ASLTalk — Real-Time Sign Language Communication</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/static/style.css" />
+  <script src="/static/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- ── Topbar ──────────────────────────────────────────────────────────────── -->
+<header class="topbar">
+
+  <!-- Professional logo -->
+  <div class="topbar-brand">
+    <div class="logo-mark">
+      <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="10" fill="white" fill-opacity="0.15"/>
+        <!-- Hand outline -->
+        <path d="M20 8c0-1.1.9-2 2-2s2 .9 2 2v10" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M24 11c0-1.1.9-2 2-2s2 .9 2 2v9"  stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M16 10c0-1.1.9-2 2-2s2 .9 2 2v10" stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M12 14c0-1.1.9-2 2-2s2 .9 2 2v6"  stroke="white" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M12 20v4a8 8 0 0 0 16 0v-4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Signal waves -->
+        <path d="M30 6 Q34 10 30 14" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6"/>
+        <path d="M32 4 Q38 10 32 16" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.35"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">ASL<strong>Talk</strong></span>
+      <span class="logo-sub">Sign Language Communication</span>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="topbar-status">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Connecting…</span>
+  </div>
+
+  <!-- Mode + theme badge -->
+  <div class="topbar-right">
+    <div class="topbar-meta" id="modeTag">Loading…</div>
+    <div class="theme-badge" id="themeBadge"></div>
+  </div>
+
+</header>
+
+<!-- ── Keyboard hint bar ───────────────────────────────────────────────────── -->
+<div class="kb-bar-wrap">
+  <div class="kb-bar" id="kbBar"></div>
+  <div class="kb-hint" id="kbHint"></div>
+</div>
+
+<!-- ── Main layout ─────────────────────────────────────────────────────────── -->
+<main class="app-layout">
+
+  <!-- ══════════ LEFT PANEL ══════════ -->
+  <section class="panel-left">
+
+    <!-- Video -->
+    <div class="video-wrapper">
+      <img id="videoFeed" src="/video_feed" alt="ASL Camera Feed" />
+      <div class="video-badge">● LIVE</div>
+      <div class="video-hint" id="videoHint">📷 Detecting hand gestures…</div>
+    </div>
+
+    <!-- Detection cards -->
+    <div class="detection-grid">
+      <div class="det-card accent-green">
+        <div class="det-label">Detected Letter</div>
+        <div class="det-value" id="detLetter">—</div>
+      </div>
+      <div class="det-card accent-blue">
+        <div class="det-label">Current Word</div>
+        <div class="det-value" id="detWord">—</div>
+      </div>
+      <div class="det-card accent-amber">
+        <div class="det-label">Word Suggestion</div>
+        <div class="det-value" id="detSuggested">—</div>
+      </div>
+      <div class="det-card accent-purple full-width">
+        <div class="det-label">Sentence</div>
+        <div class="det-value" id="detSentence">—</div>
+      </div>
+    </div>
+
+    <!-- Sentence predictions -->
+    <div class="prediction-box" id="predictionBox" style="display:none">
+      <div class="pred-header">
+        <span class="pred-icon">💡</span>
+        <span class="pred-title">Sentence Predictions</span>
+        <span class="pred-keys">Press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> to pick</span>
+      </div>
+      <div class="pred-list" id="predictionList"></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-row">
+      <button class="btn btn-outline" id="btnBackspace"><span class="btn-kb">⌫</span> Backspace</button>
+      <button class="btn btn-outline" id="btnSpace"><span class="btn-kb">␣</span> Space</button>
+      <button class="btn btn-accent"  id="btnApply"><span class="btn-kb">A</span> Apply Fix</button>
+      <button class="btn btn-danger"  id="btnClear"><span class="btn-kb">X</span> Clear</button>
+    </div>
+
+    <button class="btn btn-send-sentence" id="btnSendSentence">
+      Send Sentence to Chat
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
+
+  </section>
+
+  <!-- ══════════ RIGHT PANEL — CHAT ══════════ -->
+  <section class="panel-right">
+
+    <div class="chat-header">
+      <div class="chat-avatar">🤖</div>
+      <div class="chat-meta">
+        <div class="chat-name">ASL Assistant</div>
+        <div class="chat-sub">Online · Reads your signs</div>
+      </div>
+      <div class="chat-actions">
+        <button class="icon-btn" id="btnClearChat" title="Clear chat">🗑</button>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="msg-date-divider">Today</div>
+      <div class="msg-row received">
+        <div class="msg-bubble">
+          <p>👋 Hello! Start signing — I'll read your gestures. Use the keyboard or buttons on the left.</p>
+          <span class="msg-time">Now</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator" style="display:none">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+      <span class="typing-text">ASL Assistant is typing…</span>
+    </div>
+
+    <div class="chat-input-row">
+      <div class="input-wrapper">
+        <textarea id="chatInput" placeholder="Type a message or use ASL panel…" rows="1" maxlength="500"></textarea>
+      </div>
+      <button class="send-btn" id="btnSend">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+        </svg>
+      </button>
+    </div>
+
+  </section>
+
+</main>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
